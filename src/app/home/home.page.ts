@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { SwapiService } from '../services/swapi.service';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-home',
@@ -7,11 +8,13 @@ import { SwapiService } from '../services/swapi.service';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
+  jsonData: any = { example: 'data' };
   characterId: number | undefined;
   characterData: any;
   selectedFields: { [key: string]: boolean } = {};
   modelData: any;
   characterCount: number | undefined;
+  showDownloadButton = false;
 
   constructor(private swapiService: SwapiService) {}
 
@@ -25,6 +28,7 @@ export class HomePage implements OnInit {
         (data) => {
           this.characterData = data;
           this.selectedFields = {};
+          this.showDownloadButton = false;
         },
         (error) => {
           console.error('Error fetching character data', error);
@@ -54,8 +58,15 @@ export class HomePage implements OnInit {
       }
     }
     this.modelData = selectedData;
+    this.showDownloadButton = true;
   }
 
+  downloadJson() {
+    const blob = new Blob([JSON.stringify(this.modelData)], {
+      type: 'application/json',
+    });
+    saveAs(blob, 'model.json');
+  }
   objectKeys(obj: any): string[] {
     return Object.keys(obj);
   }

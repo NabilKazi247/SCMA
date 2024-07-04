@@ -1,0 +1,8 @@
+{
+  "name": "SCMA",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "c82d4d12"
+}

@@ -65,4 +65,3 @@ Click it to download the JSON data as a file (model.json).~~
 - OpenProject OpenAPI
 - PetStore OpenAPI
 - FileSaver.js
-

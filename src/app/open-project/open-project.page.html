@@ -1,0 +1,154 @@
+<ion-content class="ion-padding">
+  <div *ngIf="allModels">
+    <h2>Step 1. Select Models</h2>
+    <div class="schemas-grid">
+      <div *ngFor="let model of allModels" class="schema-item">
+        <ion-item>
+          <ion-checkbox
+            slot="start"
+            [(ngModel)]="checkedModels[model.key]"
+            (ionChange)="onModelSelectionChange()"
+          ></ion-checkbox>
+          <ion-label><strong>{{ model.key }}</strong></ion-label>
+        </ion-item>
+      </div>
+    </div>
+    <ion-button
+      expand="full"
+      shape="round"
+      color="primary"
+      (click)="createProjectModel()"
+      [disabled]="isCreateModelDisabled"
+      >Create Model</ion-button
+    >
+  </div>
+
+  <div *ngIf="umlUrl">
+    <h2>UML Diagram</h2>
+    <iframe [src]="umlUrl" width="100%" height="400px"></iframe>
+  </div>
+
+  <div *ngIf="allRelatedModels && objectKeys(allRelatedModels).length">
+    <h2>Step 2. Select Related Models and Properties</h2>
+    <div class="related-models-grid">
+      <div
+        *ngFor="let relatedModelKey of objectKeys(allRelatedModels)"
+        class="related-model-item"
+      >
+        <h3>{{ relatedModelKey }}</h3>
+        <div
+          *ngFor="let property of objectKeys(allRelatedModels[relatedModelKey].properties)"
+        >
+          <ion-item>
+            <ion-checkbox
+              slot="start"
+              [(ngModel)]="allRelatedModels[relatedModelKey].selectedFields[property]"
+              [disabled]="allRelatedModels[relatedModelKey].required.includes(property)"
+              [checked]="allRelatedModels[relatedModelKey].required.includes(property)"
+            ></ion-checkbox>
+            <ion-label
+              [ngClass]="{
+                'required-property': allRelatedModels[relatedModelKey].required.includes(property)
+              }"
+            >
+              <strong>{{ property }}</strong>
+              <span
+                *ngIf="allRelatedModels[relatedModelKey].required.includes(property)"
+              >
+                (required)
+              </span>
+            </ion-label>
+          </ion-item>
+        </div>
+      </div>
+    </div>
+    <!-- Next Step Button -->
+    <ion-button
+      expand="full"
+      shape="round"
+      color="primary"
+      (click)="showAvailablePaths()"
+      >Next Step</ion-button
+    >
+  </div>
+
+  <!-- Display available paths after Next Step is pressed -->
+  <div *ngIf="pathsAvailable && objectKeys(allRelatedModels).length">
+    <h2>Step 3. Select API Request</h2>
+    <ion-list>
+      <div *ngFor="let modelKey of objectKeys(allRelatedModels)">
+        <!-- Only display models that have the paths field -->
+        <div *ngIf="allRelatedModels[modelKey].paths">
+          <h3>{{ modelKey }}</h3>
+          <div *ngFor="let pathInfo of allRelatedModels[modelKey].paths">
+            <ion-item>
+              <ion-label>
+                <!-- Iterate through methods within each path -->
+                <div *ngFor="let method of objectKeys(pathInfo.method)">
+                  <!-- Assign a class based on the method type -->
+                  <span
+                    [ngClass]="{
+                        'method-get': method === 'get',
+                        'method-post': method === 'post',
+                        'method-delete': method === 'delete',
+                        'method-put': method === 'put'
+                      }"
+                    >{{ method.toUpperCase() }}
+                  </span>
+                  &nbsp;{{ pathInfo.path }}&nbsp; {{
+                  pathInfo.method[method].summary || 'No summary available' }}
+
+                  <!-- Execute button for each method -->
+                  <ion-button
+                    class="execute"
+                    [disabled]="!isExecuteEnabled(modelKey, pathInfo, method)"
+                    (click)="openParameterPopup(modelKey, pathInfo.path, method, pathInfo.method[method]?.parameters)"
+                  >
+                    Execute
+                  </ion-button>
+                  <br /><br /><br />
+                </div>
+              </ion-label>
+            </ion-item>
+          </div>
+        </div>
+      </div>
+    </ion-list>
+  </div>
+
+  <!-- Display API response  -->
+  <div *ngIf="customizedOutput && objectKeys(customizedOutput).length">
+    <h2>Customized Output</h2>
+    <ion-list>
+      <ion-item *ngFor="let field of objectKeys(customizedOutput)">
+        <ion-label>
+          <strong>{{ field }}:</strong> {{ customizedOutput[field] | json }}
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- Section to show the generated Cypher code -->
+  <div *ngIf="cypherCode">
+    <h2>Step 4. Generate Cypher Code</h2>
+    <textarea [(ngModel)]="this.cypherCode" style="width: 100%; height: 200px">
+{{ cypherCode }}</textarea
+    >
+    <ion-button
+      expand="full"
+      shape="round"
+      color="primary"
+      (click)="executeQuery()"
+      >Execute Cypher</ion-button
+    >
+  </div>
+
+  <!-- <textarea *ngIf="cypherCode" style="width: 100%; height: 20%">
+    {{ cypherCode }}</textarea
+  >
+
+  <div id="neo4jd3"></div>
+  <ion-button *ngIf="showDownloadButton" expand="full" (click)="downloadJson()"
+    >Download JSON</ion-button
+  > -->
+</ion-content>

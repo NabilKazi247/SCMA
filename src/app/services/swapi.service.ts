@@ -10,11 +10,11 @@ export class SwapiService {
 
   constructor(private http: HttpClient) {}
 
-  getCharacter(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/people/${id}/`);
+  getModel(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/`);
   }
 
-  getCharacterCount(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/people/`);
+  getModelDetails(modelType: string): Observable<any> {
+    return this.http.get<any>(`${modelType}`);
   }
 }

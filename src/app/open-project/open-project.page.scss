@@ -1,0 +1,114 @@
+ion-content {
+    --background: var(--ion-color-light);
+  /* Styles for API methods */
+.method-get {
+    background-color: #007bff; /* Blue background */
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  
+  .method-post {
+    background-color: #28a745; /* Green background */
+    color: white;
+   
+    border-radius: 4px;
+  }
+  
+  .method-delete {
+    background-color: #dc3545; /* Red background */
+    color: white;
+
+    border-radius: 4px;
+  }
+  
+  .method-put {
+    background-color: #fd7e14; /* Orange background */
+    color: white;
+
+    border-radius: 4px;
+  }
+  
+    h2 {
+      text-align: center;
+      margin: 20px 0;
+    }
+  
+    .schemas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+  
+    .schema-item {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 0.5rem;
+  
+    }
+  
+    .related-models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 0rem;
+      margin-top: 10px;
+    }
+  
+    .related-model-item {
+      border: 1px solid #00784a;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+
+    }
+  
+    .required-property {
+      color: gray;
+      font-weight: bold;
+    }
+  
+    #neo4jd3 {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
+  
+    iframe {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+  
+    textarea {
+      margin-top: 20px;
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+  }
+  
+ .related-paths-grid {
+  margin-top: 20px;
+}
+
+.selected-path-item {
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.next-step-button {
+  margin-top: 20px;
+}
+
+.text-missing{
+
+  background-color: red; /* Grey background for disabled button */
+  color: white; /* Grey text for disabled button */ 
+}
+
+.execute {
+  float: right
+}

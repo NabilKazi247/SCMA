@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { SwapiService } from '../services/swapi.service';
 import { saveAs } from 'file-saver';
 
@@ -7,58 +7,73 @@ import { saveAs } from 'file-saver';
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage implements OnInit {
-  jsonData: any = { example: 'data' };
-  characterId: number | undefined;
-  characterData: any;
-  selectedFields: { [key: string]: boolean } = {};
+export class HomePage {
+  selectedModel: string | undefined;
   modelData: any;
-  characterCount: number | undefined;
+  selectedFields: { [key: string]: boolean } = {};
   showDownloadButton = false;
+  modelData2: any;
 
   constructor(private swapiService: SwapiService) {}
 
   ngOnInit() {
-    this.fetchCharacterCount();
+    this.fetchModelData();
   }
 
-  fetchCharacterData() {
-    if (this.characterId) {
-      this.swapiService.getCharacter(this.characterId).subscribe(
-        (data) => {
-          this.characterData = data;
-          this.selectedFields = {};
-          this.showDownloadButton = false;
-        },
-        (error) => {
-          console.error('Error fetching character data', error);
-        }
-      );
-    } else {
-      alert('Please enter a character ID.');
-    }
-  }
-
-  fetchCharacterCount() {
-    this.swapiService.getCharacterCount().subscribe(
+  fetchModelData() {
+    this.swapiService.getModel().subscribe(
       (data) => {
-        this.characterCount = data.count + 1;
+        this.modelData = data;
+        this.selectedFields = {};
+        this.showDownloadButton = false; // Hide download button until model is created
+        console.log('dlkdlkxx');
+        console.log(data);
       },
       (error) => {
-        console.error('Error fetching character count', error);
+        console.error('Error fetching model data:', error);
+        // Handle error as needed
       }
     );
   }
 
   createModel() {
-    const selectedData: { [key: string]: any } = {}; // Explicitly type selectedData
+    const selectedData: { [key: string]: any } = {};
     for (const key in this.selectedFields) {
       if (this.selectedFields[key]) {
-        selectedData[key] = this.characterData[key];
+        selectedData[key] = this.modelData[key];
       }
     }
-    this.modelData = selectedData;
-    this.showDownloadButton = true;
+    // this.modelData = selectedData;
+    this.modelData2 = selectedData;
+
+    for (const key in this.selectedFields) {
+      if (this.selectedFields[key]) {
+        console.log(selectedData[key]);
+        this.swapiService.getModelDetails(selectedData[key]).subscribe(
+          (data) => {
+            console.log(data);
+          },
+          (error) => {
+            console.error('Error fetching model data:', error);
+            // Handle error as needed
+          }
+        );
+      }
+    }
+    this.showDownloadButton = true; // Show download button after model is created
+  }
+
+  createModel2() {
+    const selectedData: { [key: string]: any } = {};
+    for (const key in this.selectedFields) {
+      if (this.selectedFields[key]) {
+        selectedData[key] = this.modelData[key];
+      }
+    }
+    // this.modelData = selectedData;
+    this.modelData2 = selectedData;
+
+    this.showDownloadButton = true; // Show download button after model is created
   }
 
   downloadJson() {
@@ -67,6 +82,8 @@ export class HomePage implements OnInit {
     });
     saveAs(blob, 'model.json');
   }
+
+  // Method to get keys of an object
   objectKeys(obj: any): string[] {
     return Object.keys(obj);
   }

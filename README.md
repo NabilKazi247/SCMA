@@ -65,3 +65,93 @@ Click it to download the JSON data as a file (model.json).~~
 - OpenProject OpenAPI
 - PetStore OpenAPI
 - FileSaver.js
+
+# Project Changelog
+
+## Version 1.5.0
+### 🚀 Major Features
+- **Selective Synchronization**: Implemented selective synchronization for user-defined model and API elements.
+- **Bidirectional Synchronization**: Developed bidirectional synchronization mechanism for propagating changes between the model and the API structure.
+- **Automatic Synchronization Triggers**:
+  - **Instant Trigger**: Every change is propagated immediately.
+  - **Scheduled Trigger**: Automatically syncs every hour.
+  - **Delayed Trigger**: Waits 15 minutes after a change.
+- **Manual Synchronization**: Added manual triggers for user-initiated sync.
+
+### 🛠️ Enhancements
+- Enhanced **API Method Customization** allowing users to selectively sync `GET`, `POST`, `PUT`, and `DELETE` methods.
+- Refined **Model Extraction Process** to support complex types such as nested schemas and custom API parameters.
+- Improved **Model Representation in Neo4j** for better querying and relationship management.
+- Enhanced the **User Interface** for easier property selection and model visualization.
+- Integrated **Path Information Visualization** within Step 3 of the workflow.
+
+### ✅ Bug Fixes
+- Fixed the issue with **Execute Button** remaining disabled despite valid property selection.
+- Resolved inconsistencies in **Bidirectional Updates** when modifying nodes with multiple relationships.
+- Corrected **Synchronization Logic** to prevent infinite loops when models are interdependent.
+
+### 🎨 UI/UX Improvements
+- Added **Color-Coded Method Labels** for `GET` (blue), `POST` (green), `PUT` (orange), and `DELETE` (red) methods.
+- Updated the layout in **Step 3 - Select API Requests** for a more streamlined user experience.
+- Introduced **Missing Property Highlighting** with gray-out effects and text indicators.
+
+---
+
+## Version 1.4.0
+### ✨ Major Changes
+- Introduced **User-Driven Model Customization** with the ability to modify selected fields in a model.
+- Added **UML Diagram Visualization** for representing model structures graphically.
+
+### 🛠️ Enhancements
+- Refined **Model Creation Workflow** with a multi-step approach:
+  - **Step 1**: Select Models.
+  - **Step 2**: Select Related Models and Properties.
+  - **Step 3**: Define API Requests.
+  - **Step 4**: Execute and View Results.
+
+### ✅ Bug Fixes
+- Resolved path synchronization errors in **Neo4j Graph Update Module**.
+- Fixed validation issues in **API Parameter Parsing**.
+
+---
+
+## Version 1.3.0
+### 🌟 New Features
+- Initial implementation of **OpenAPI-to-Model Synchronization** with basic CRUD operations.
+- Integration of **Neo4j Service** for storing API paths and relationships.
+- Created **Basic API Visualization** using PlantUML for diagrammatic representations.
+
+### 🛠️ Enhancements
+- Added **Model Relationships Mapping** for handling interdependencies between API elements.
+- Enabled **Custom Property Selection** within models.
+
+### ✅ Bug Fixes
+- Fixed minor UI glitches in **Model Selection Screen**.
+- Addressed inconsistencies in **Path Method Handling** during model sync.
+
+---
+
+## Version 1.2.0
+### 📦 Major Updates
+- Implemented **Initial Model Creation** from OpenAPI specifications.
+- Integrated **Neo4j** for storing model graphs.
+
+### ✅ Bug Fixes
+- Fixed data-type mismatches between API parameters and Neo4j properties.
+
+---
+
+## Version 1.1.0
+### 🛠️ Initial Release
+- Core functionality for **OpenAPI Specification Parsing**.
+- Basic **Model Creation** for primary schemas.
+
+---
+
+## **Changelog Format Key**
+- 🚀 **Major Features**
+- 🔄 **Synchronization Features**
+- ✨ **UI/UX Improvements**
+- 🐞 **Bug Fixes**
+- 🛠️ **Enhancements**
+- 📊 **Visual Features**

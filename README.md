@@ -1,6 +1,6 @@
 # **SCMA**
 
-Welcome to SCMA App, an Ionic Angular application for dynamic JSON data handling and download.
+Welcome to SCMA App, an Ionic Angular application.
 
 ## **Prerequisites**
 Before you begin, ensure you have the following installed:
@@ -34,23 +34,35 @@ ionic serve
 ```
 This command starts a local development server and opens your default web browser to preview the app.
 
-## **Usage:**
-### **Fetch Data**
-1. Enter a Character ID (1-83) in the input field.
-2. Click Fetch Data to retrieve information about the character from the Star Wars API (SWAPI).
+## **Usage**
+### **Fetch Models**
+Automatically fetches Models from the provided OpenAPI endpoint.
 
-### **Create Model**
-1. Select specific data fields you want to include in the model.
-2. Click Create Model to generate the JSON model based on your selections.
+### **Select Models**
+Select specific Models you want to include in the UML and Neo4j Graph model.
 
-### **Download JSON**
-Once the model is created, the Download JSON button will appear.
-Click it to download the JSON data as a file (model.json).
+### **Create UML, Neo4j Graph Model and Cypher**
+1. Click 'Create Graph Model' to generate the UML, Neo4j Graph model and Cypher code based on your selection.
+2. Using different logic/approaches from OpenApi Specification such as:
+   - find related models from selected models properties.
+   - find related paths.
+   - find related model from the related path and create relationship between the related model and selected model.
+   - checks which properties of the model are required.
+3. Following the above logic the UML, Neo4j Graph model and Cypher code are created..
+4. Cypher code can be edited and executed which then will create the Graph Model in the connect Neo4j Database.
+
+### **~~Download JSON~~**
+~~Once the model is created, the Download JSON button will appear.
+Click it to download the JSON data as a file (model.json).~~
 
 ## **Technologies Used**
 - Ionic Framework
 - Angular
 - TypeScript
-- SWAPI (Star Wars API)
+- Docker (For OpenProject)
+- Neo4j Desktop
+- ~~SWAPI (Star Wars API)~~
+- OpenProject OpenAPI
+- PetStore OpenAPI
 - FileSaver.js
 

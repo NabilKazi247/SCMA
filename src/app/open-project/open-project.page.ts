@@ -25,6 +25,7 @@ export class OpenProjectPage implements OnInit {
   executedModel!: string;
   showDownloadButton = false;
   cypherCode: string | undefined; // This will hold the generated Cypher code
+  cypherCode2: string | undefined;
   umlUrl: SafeResourceUrl | undefined;
   issecl: boolean = false;
   issecl2: boolean = false;
@@ -807,6 +808,9 @@ export class OpenProjectPage implements OnInit {
       (response) => {
         console.log('API Response:', response);
         this.showApiResponse(response); // Show response to the user
+        const cypherCodesss = this.generateCypherFromAPIResponse(response);
+        console.log('okoko');
+        console.log(cypherCodesss);
         this.customizedOutput = this.getCustomizedOutput(response); // Generate customized output
         this.generateCypherCodeFromCustomizedOutput(); // Generate Neo4j Cypher code
       },
@@ -1002,9 +1006,9 @@ export class OpenProjectPage implements OnInit {
   }
 
   executeQuery() {
-    if (this.cypherCode) {
+    if (this.cypherCode2) {
       this.neo4jService
-        .runCypherQuery(this.cypherCode)
+        .runCypherQuery(this.cypherCode2)
         .then((result) => {
           // this.queryResult = result;
           // this.querylength = this.queryResult.length;
@@ -1017,6 +1021,38 @@ export class OpenProjectPage implements OnInit {
     } else {
       console.warn('Query is empty');
     }
+  }
+  generateCypherFromAPIResponse(response: any): string {
+    let cypher = '';
+
+    // Iterate through each pet in the response array
+    response.forEach((pet: any) => {
+      // Create a Pet node
+      cypher += `CREATE (p${pet.id}:Pet {id: ${pet.id}, name: "${pet.name}", status: "${pet.status}"})\n`;
+
+      // Create Category node and relationship (if category exists)
+      if (pet.category) {
+        cypher += `MERGE (c${pet.category.id}:Category {id: ${pet.category.id}, name: "${pet.category.name}"})\n`;
+        cypher += `MERGE (p${pet.id})-[:BELONGS_TO]->(c${pet.category.id})\n`;
+      }
+
+      // Create Tag nodes and relationships (if tags exist)
+      if (pet.tags && pet.tags.length > 0) {
+        pet.tags.forEach((tag: any) => {
+          cypher += `MERGE (t${tag.id}:Tag {id: ${tag.id}, name: "${tag.name}"})\n`;
+          cypher += `MERGE (p${pet.id})-[:HAS_TAG]->(t${tag.id})\n`;
+        });
+      }
+
+      // Add photo URLs if available
+      if (pet.photoUrls && pet.photoUrls.length > 0) {
+        cypher += `SET p${pet.id}.photoUrls = ${JSON.stringify(
+          pet.photoUrls
+        )}\n`;
+      }
+    });
+    this.cypherCode2 = cypher;
+    return cypher;
   }
 }
 //import Neo4jd3 from 'neo4jd3';

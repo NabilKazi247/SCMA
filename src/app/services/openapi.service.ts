@@ -45,10 +45,11 @@ export class OpenapiService {
     params: any,
     body: any = {}
   ): Observable<any> {
-    const url = `${this.apiUrl}${path}`;
+    const url = `${this.apiUrl}/projects/2`;
     const url2 = `https://petstore3.swagger.io/api/v3${path}`;
     switch (method.toLowerCase()) {
       case 'get':
+        console.log(url);
         return this.http.get<any>(url2, { headers: this.getHeaders(), params });
       case 'post':
         return this.http.post<any>(url2, body, { headers: this.getHeaders() });

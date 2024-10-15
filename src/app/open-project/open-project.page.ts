@@ -808,9 +808,9 @@ export class OpenProjectPage implements OnInit {
       (response) => {
         console.log('API Response:', response);
         this.showApiResponse(response); // Show response to the user
-        const cypherCodesss = this.generateCypherFromAPIResponse(response);
-        console.log('okoko');
-        console.log(cypherCodesss);
+        // const cypherCodesss = this.generateCypherFromAPIResponse(response);
+        // console.log('okoko');
+        // console.log(cypherCodesss);
         this.customizedOutput = this.getCustomizedOutput(response); // Generate customized output
         this.generateCypherCodeFromCustomizedOutput(); // Generate Neo4j Cypher code
       },
@@ -889,7 +889,7 @@ export class OpenProjectPage implements OnInit {
 
     // Step 1: Create the main node for the executedModel (e.g., Pet)
     let mainNodeCypher = `MERGE (${this.executedModel}:${this.executedModel} {`;
-
+    console.log(this.customizedOutput);
     // Collect properties for the main node that do not match related models
     const nonRelatedProperties: string[] = [];
     let relationshipCounter = 0; // To ensure unique variable names for related models
@@ -1025,22 +1025,34 @@ export class OpenProjectPage implements OnInit {
   generateCypherFromAPIResponse(response: any): string {
     let cypher = '';
 
+    // Track declared nodes to prevent duplicates
+    const categoryTracker = new Set();
+    const tagTracker = new Set();
+
     // Iterate through each pet in the response array
     response.forEach((pet: any) => {
       // Create a Pet node
-      cypher += `CREATE (p${pet.id}:Pet {id: ${pet.id}, name: "${pet.name}", status: "${pet.status}"})\n`;
+      cypher += `MERGE (p${pet.id}:Pet {id: ${pet.id}, name: "${pet.name}", status: "${pet.status}"})\n`;
 
       // Create Category node and relationship (if category exists)
       if (pet.category) {
-        cypher += `MERGE (c${pet.category.id}:Category {id: ${pet.category.id}, name: "${pet.category.name}"})\n`;
-        cypher += `MERGE (p${pet.id})-[:BELONGS_TO]->(c${pet.category.id})\n`;
+        const categoryId = pet.category.id;
+        if (!categoryTracker.has(categoryId)) {
+          cypher += `MERGE (c${categoryId}:Category {id: ${categoryId}, name: "${pet.category.name}"})\n`;
+          categoryTracker.add(categoryId);
+        }
+        cypher += `MERGE (p${pet.id})-[:BELONGS_TO]->(c${categoryId})\n`;
       }
 
       // Create Tag nodes and relationships (if tags exist)
       if (pet.tags && pet.tags.length > 0) {
         pet.tags.forEach((tag: any) => {
-          cypher += `MERGE (t${tag.id}:Tag {id: ${tag.id}, name: "${tag.name}"})\n`;
-          cypher += `MERGE (p${pet.id})-[:HAS_TAG]->(t${tag.id})\n`;
+          const tagId = tag.id;
+          if (!tagTracker.has(tagId)) {
+            cypher += `MERGE (t${tagId}:Tag {id: ${tagId}, name: "${tag.name}"})\n`;
+            tagTracker.add(tagId);
+          }
+          cypher += `MERGE (p${pet.id})-[:HAS_TAG]->(t${tagId})\n`;
         });
       }
 
@@ -1051,6 +1063,8 @@ export class OpenProjectPage implements OnInit {
         )}\n`;
       }
     });
+
+    // Store and return the generated Cypher code
     this.cypherCode2 = cypher;
     return cypher;
   }

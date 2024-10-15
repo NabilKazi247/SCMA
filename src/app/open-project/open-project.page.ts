@@ -863,121 +863,157 @@ export class OpenProjectPage implements OnInit {
   }
 
   getCustomizedOutput(response: any): any {
-    let customizedOutput: any = {};
+    const parseObject = (obj: any): any => {
+      const result: any = {};
 
-    Object.keys(this.allRelatedModels).forEach((modelKey) => {
-      const selectedFields =
-        this.allRelatedModels[modelKey]?.selectedFields || {};
+      for (const key in obj) {
+        if (Array.isArray(obj[key])) {
+          // Check if the array contains objects or primitive values
+          result[key] = obj[key].map((item: any) =>
+            typeof item === 'object' ? parseObject(item) : item
+          );
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          result[key] = parseObject(obj[key]); // Nested object
+        } else {
+          result[key] = obj[key]; // Primitive value
+        }
+      }
 
-      const modelOutput = this.extractFieldsFromResponse(
-        response,
-        selectedFields
-      );
-      customizedOutput = { ...customizedOutput, ...modelOutput };
-    });
+      return result;
+    };
 
-    return customizedOutput;
+    if (Array.isArray(response)) {
+      return response.map((item: any) => parseObject(item));
+    }
+
+    return parseObject(response);
   }
 
   //-------------------------------------------------STEP 4-----------------------------------------------------------------------------
 
   generateCypherCodeFromCustomizedOutput() {
     let cypherStatements: string[] = [];
-    console.log(this.executedModel);
-    console.log(this.customizedOutput);
-    console.log(this.allRelatedModels[this.executedModel]?.relatedModels);
+    const createdNodes = new Set(); // Track already created nodes
 
-    // Step 1: Create the main node for the executedModel (e.g., Pet)
-    let mainNodeCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id}:${this.executedModel} {`;
-    console.log(this.customizedOutput);
-    // Collect properties for the main node that do not match related models
-    const nonRelatedProperties: string[] = [];
-    let relationshipCounter = 0; // To ensure unique variable names for related models
+    const processObject = (customizedObject: any, index: number) => {
+      console.log(this.executedModel);
+      console.log(customizedObject);
+      console.log(this.allRelatedModels[this.executedModel]?.relatedModels);
 
-    // Step 2: Iterate through the customized output and handle properties
-    Object.entries(this.customizedOutput).forEach(([key, value]) => {
-      let isRelatedModel = false;
+      // Step 1: Create the main node for the executedModel (e.g., Pet)
+      const mainNodeIdentifier = `${this.executedModel}_${customizedObject.id}`;
+      let mainNodeCypher = `MERGE (${mainNodeIdentifier}:${this.executedModel} {`;
 
-      // Step 3: Loop through the relatedModels
-      this.allRelatedModels[this.executedModel]?.relatedModels.forEach(
-        (model: {
-          [x: string]: any;
-          hasOwnProperty: (arg0: string) => any;
-        }) => {
-          for (const relatedModelName in model) {
-            if (model.hasOwnProperty(relatedModelName)) {
-              let relatedProperty = model[relatedModelName];
+      // Collect properties for the main node that do not match related models
+      const nonRelatedProperties: string[] = [];
+      let relationshipCounter = 0; // To ensure unique variable names for related models
 
-              // Check if the current property key (e.g., category or tags) matches the related property
-              if (key === relatedProperty) {
-                // *** Add your condition here ***
-                if (relatedProperty.toLowerCase().includes('id')) {
-                  relatedProperty = 'id';
-                  const relatedNodeCypher = `MERGE (${relatedModelName}:${relatedModelName} {${relatedProperty}: ${value} })`;
-                  const relationshipCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id})-[:RELATED_TO]->(${relatedModelName})`;
-                  cypherStatements.push(relatedNodeCypher);
-                  cypherStatements.push(relationshipCypher);
-                }
+      // Step 2: Iterate through the customized output and handle properties
+      Object.entries(customizedObject).forEach(([key, value]) => {
+        let isRelatedModel = false;
 
-                // If the property is an object (e.g., category) or array of objects (e.g., tags), handle it differently
-                if (Array.isArray(value)) {
-                  value.forEach((item, index) => {
-                    if (typeof item === 'object') {
-                      // Handle array of objects like tags
-                      const tagCypher = this.createRelatedModelCypher(
-                        relatedModelName,
-                        item,
-                        index
-                      ); // Pass index to ensure unique variable names
-                      cypherStatements.push(tagCypher);
+        // Step 3: Loop through the relatedModels
+        this.allRelatedModels[this.executedModel]?.relatedModels.forEach(
+          (model: {
+            [x: string]: any;
+            hasOwnProperty: (arg0: string) => any;
+          }) => {
+            for (const relatedModelName in model) {
+              if (model.hasOwnProperty(relatedModelName)) {
+                let relatedProperty = model[relatedModelName];
 
-                      const relationshipCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id})-[:RELATED_TO]->(${relatedModelName}_${index})`;
-                      cypherStatements.push(relationshipCypher);
-                    } else {
-                      // Handle array of primitives like photoUrls
-                      nonRelatedProperties.push(
-                        `${key}: [${value.map((v) => `"${v}"`).join(', ')}]`
-                      );
+                // Check if the current property key (e.g., category or tags) matches the related property
+                if (key === relatedProperty) {
+                  if (relatedProperty.toLowerCase().includes('id')) {
+                    relatedProperty = 'id';
+                    const relatedNodeIdentifier = `${relatedModelName}_${value}`;
+                    if (!createdNodes.has(relatedNodeIdentifier)) {
+                      const relatedNodeCypher = `MERGE (${relatedNodeIdentifier}:${relatedModelName} {${relatedProperty}: ${value} })`;
+                      cypherStatements.push(relatedNodeCypher);
+                      createdNodes.add(relatedNodeIdentifier); // Track the created node
                     }
-                  });
-                } else if (typeof value === 'object') {
-                  // Handle object properties like category
-                  const categoryCypher = this.createRelatedModelCypher(
-                    relatedModelName,
-                    value,
-                    relationshipCounter
-                  ); // Ensure unique variable names
-                  cypherStatements.push(categoryCypher);
 
-                  const relationshipCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id})-[:RELATED_TO]->(${relatedModelName}_${relationshipCounter})`;
-                  cypherStatements.push(relationshipCypher);
+                    const relationshipCypher = `MERGE (${mainNodeIdentifier})-[:RELATED_TO]->(${relatedNodeIdentifier})`;
+                    cypherStatements.push(relationshipCypher);
+                  }
 
-                  relationshipCounter++; // Increment for each unique relationship
+                  // Handle array of objects (e.g., tags)
+                  if (Array.isArray(value)) {
+                    value.forEach((item, arrayIndex) => {
+                      if (typeof item === 'object') {
+                        const relatedNodeIdentifier = `${relatedModelName}_${item.id}`;
+                        if (!createdNodes.has(relatedNodeIdentifier)) {
+                          const tagCypher = this.createRelatedModelCypher(
+                            relatedModelName,
+                            item,
+                            arrayIndex
+                          );
+                          cypherStatements.push(tagCypher);
+                          createdNodes.add(relatedNodeIdentifier); // Track the created node
+                        }
+
+                        const relationshipCypher = `MERGE (${mainNodeIdentifier})-[:RELATED_TO]->(${relatedNodeIdentifier})`;
+                        cypherStatements.push(relationshipCypher);
+                      } else {
+                        // Handle array of primitives like photoUrls
+                        nonRelatedProperties.push(
+                          `${key}: [${value.map((v) => `"${v}"`).join(', ')}]`
+                        );
+                      }
+                    });
+                  } else if (typeof value === 'object') {
+                    const relatedNodeIdentifier = `${relatedModelName}_${
+                      (value as { id: number }).id
+                    }`;
+                    if (!createdNodes.has(relatedNodeIdentifier)) {
+                      const categoryCypher = this.createRelatedModelCypher(
+                        relatedModelName,
+                        value,
+                        relationshipCounter
+                      );
+                      cypherStatements.push(categoryCypher);
+                      createdNodes.add(relatedNodeIdentifier); // Track the created node
+                    }
+
+                    const relationshipCypher = `MERGE (${mainNodeIdentifier})-[:RELATED_TO]->(${relatedNodeIdentifier})`;
+                    cypherStatements.push(relationshipCypher);
+
+                    relationshipCounter++; // Increment for each unique relationship
+                  }
+                  isRelatedModel = true;
                 }
-                isRelatedModel = true;
               }
             }
           }
+        );
+        // If the property doesn't match any related model, add it to the main node
+        if (!isRelatedModel) {
+          if (typeof value === 'string') {
+            nonRelatedProperties.push(`${key}: "${value}"`);
+          } else if (Array.isArray(value)) {
+            // Handle arrays of primitives
+            nonRelatedProperties.push(
+              `${key}: [${value.map((v) => `"${v}"`).join(', ')}]`
+            );
+          } else {
+            nonRelatedProperties.push(`${key}: ${value}`);
+          }
         }
-      );
-      // If the property doesn't match any related model, add it to the main node
-      if (!isRelatedModel) {
-        if (typeof value === 'string') {
-          nonRelatedProperties.push(`${key}: "${value}"`);
-        } else if (Array.isArray(value)) {
-          // Handle arrays of primitives
-          nonRelatedProperties.push(
-            `${key}: [${value.map((v) => `"${v}"`).join(', ')}]`
-          );
-        } else {
-          nonRelatedProperties.push(`${key}: ${value}`);
-        }
-      }
-    });
+      });
 
-    // Step 6: Add the non-related properties to the main node
-    mainNodeCypher += nonRelatedProperties.join(', ') + ' })';
-    cypherStatements.unshift(mainNodeCypher); // Add the main node at the beginning
+      // Step 6: Add the non-related properties to the main node
+      mainNodeCypher += nonRelatedProperties.join(', ') + ' })';
+      cypherStatements.unshift(mainNodeCypher); // Add the main node at the beginning
+    };
+
+    // Handle both single and multiple objects in customizedOutput
+    if (Array.isArray(this.customizedOutput)) {
+      this.customizedOutput.forEach((customizedObject: any, index: number) => {
+        processObject(customizedObject, index);
+      });
+    } else {
+      processObject(this.customizedOutput, 0);
+    }
 
     // Final Cypher Code
     this.cypherCode = cypherStatements.join('\n');
@@ -1002,7 +1038,7 @@ export class OpenProjectPage implements OnInit {
       .join(', ');
 
     // Use the index to ensure unique variable names for each related node
-    return `MERGE (${relatedModelName}_${index}:${relatedModelName} {${props}})`;
+    return `MERGE (${relatedModelName}_${relatedObject.id}:${relatedModelName} {${props}})`;
   }
 
   executeQuery() {

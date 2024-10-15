@@ -888,7 +888,7 @@ export class OpenProjectPage implements OnInit {
     console.log(this.allRelatedModels[this.executedModel]?.relatedModels);
 
     // Step 1: Create the main node for the executedModel (e.g., Pet)
-    let mainNodeCypher = `MERGE (${this.executedModel}:${this.executedModel} {`;
+    let mainNodeCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id}:${this.executedModel} {`;
     console.log(this.customizedOutput);
     // Collect properties for the main node that do not match related models
     const nonRelatedProperties: string[] = [];
@@ -914,7 +914,7 @@ export class OpenProjectPage implements OnInit {
                 if (relatedProperty.toLowerCase().includes('id')) {
                   relatedProperty = 'id';
                   const relatedNodeCypher = `MERGE (${relatedModelName}:${relatedModelName} {${relatedProperty}: ${value} })`;
-                  const relationshipCypher = `MERGE (${this.executedModel})-[:RELATED_TO]->(${relatedModelName})`;
+                  const relationshipCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id})-[:RELATED_TO]->(${relatedModelName})`;
                   cypherStatements.push(relatedNodeCypher);
                   cypherStatements.push(relationshipCypher);
                 }
@@ -931,7 +931,7 @@ export class OpenProjectPage implements OnInit {
                       ); // Pass index to ensure unique variable names
                       cypherStatements.push(tagCypher);
 
-                      const relationshipCypher = `MERGE (${this.executedModel})-[:RELATED_TO]->(${relatedModelName}_${index})`;
+                      const relationshipCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id})-[:RELATED_TO]->(${relatedModelName}_${index})`;
                       cypherStatements.push(relationshipCypher);
                     } else {
                       // Handle array of primitives like photoUrls
@@ -949,7 +949,7 @@ export class OpenProjectPage implements OnInit {
                   ); // Ensure unique variable names
                   cypherStatements.push(categoryCypher);
 
-                  const relationshipCypher = `MERGE (${this.executedModel})-[:RELATED_TO]->(${relatedModelName}_${relationshipCounter})`;
+                  const relationshipCypher = `MERGE (${this.executedModel}_${this.customizedOutput.id})-[:RELATED_TO]->(${relatedModelName}_${relationshipCounter})`;
                   cypherStatements.push(relationshipCypher);
 
                   relationshipCounter++; // Increment for each unique relationship
@@ -1006,9 +1006,9 @@ export class OpenProjectPage implements OnInit {
   }
 
   executeQuery() {
-    if (this.cypherCode2) {
+    if (this.cypherCode) {
       this.neo4jService
-        .runCypherQuery(this.cypherCode2)
+        .runCypherQuery(this.cypherCode)
         .then((result) => {
           // this.queryResult = result;
           // this.querylength = this.queryResult.length;
@@ -1021,52 +1021,6 @@ export class OpenProjectPage implements OnInit {
     } else {
       console.warn('Query is empty');
     }
-  }
-  generateCypherFromAPIResponse(response: any): string {
-    let cypher = '';
-
-    // Track declared nodes to prevent duplicates
-    const categoryTracker = new Set();
-    const tagTracker = new Set();
-
-    // Iterate through each pet in the response array
-    response.forEach((pet: any) => {
-      // Create a Pet node
-      cypher += `MERGE (p${pet.id}:Pet {id: ${pet.id}, name: "${pet.name}", status: "${pet.status}"})\n`;
-
-      // Create Category node and relationship (if category exists)
-      if (pet.category) {
-        const categoryId = pet.category.id;
-        if (!categoryTracker.has(categoryId)) {
-          cypher += `MERGE (c${categoryId}:Category {id: ${categoryId}, name: "${pet.category.name}"})\n`;
-          categoryTracker.add(categoryId);
-        }
-        cypher += `MERGE (p${pet.id})-[:BELONGS_TO]->(c${categoryId})\n`;
-      }
-
-      // Create Tag nodes and relationships (if tags exist)
-      if (pet.tags && pet.tags.length > 0) {
-        pet.tags.forEach((tag: any) => {
-          const tagId = tag.id;
-          if (!tagTracker.has(tagId)) {
-            cypher += `MERGE (t${tagId}:Tag {id: ${tagId}, name: "${tag.name}"})\n`;
-            tagTracker.add(tagId);
-          }
-          cypher += `MERGE (p${pet.id})-[:HAS_TAG]->(t${tagId})\n`;
-        });
-      }
-
-      // Add photo URLs if available
-      if (pet.photoUrls && pet.photoUrls.length > 0) {
-        cypher += `SET p${pet.id}.photoUrls = ${JSON.stringify(
-          pet.photoUrls
-        )}\n`;
-      }
-    });
-
-    // Store and return the generated Cypher code
-    this.cypherCode2 = cypher;
-    return cypher;
   }
 }
 //import Neo4jd3 from 'neo4jd3';
